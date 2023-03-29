@@ -38,8 +38,8 @@ curseur.execute("""
                 CREATE TABLE IF NOT EXISTS asso_user_action(
                     user_id INTEGER,
                     action_id INTEGER,
-                    date_achat TEXT NOT NULL,
-                    date_vente TEXT NOT NULL,
+                    date_achat DATE NOT NULL,
+                    date_vente DATE NOT NULL,
                     prix_achat FLOAT NOT NULL,
                     prix_vente FLOAT NOT NULL,
                     FOREIGN KEY(user_id) REFERENCES groupe(id),
