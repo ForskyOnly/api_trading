@@ -27,9 +27,7 @@ curseur.execute("""
                 CREATE TABLE IF NOT EXISTS action (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nom TEXT NOT NULL,
-                    prix FLOAT NOT NULL,
-                    entreprise_id INTEGER NOT NULL,
-                    FOREIGN KEY(entreprise_id) REFERENCES entreprise(id)
+                    prix FLOAT NOT NULL
                 )
                 """)
 
@@ -47,12 +45,6 @@ curseur.execute("""
                 )
                 """)
 
-curseur.execute("""
-                CREATE TABLE IF NOT EXISTS entreprise (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nom TEXT NOT NULL
-                )
-                """)
 
 connexion.commit()
 
