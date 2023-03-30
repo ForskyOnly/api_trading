@@ -1,4 +1,55 @@
+from fastapi import FastAPI, HTTPException, Request, Depends
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel
+import crud
+from jose import jwt
+import hashlib
+from datetime import datetime, timedelta
 import sqlite3
+
+
+
+
+connexion = sqlite3.connect('api_trad.db')
+curseur = connexion.cursor()
+
+secret_key = 'premierepartie02456_deuxiemepartie8547'
+
+def generate_token(user_id):
+    payload = {
+        'user_id': user_id,
+        'exp': datetime.utcnow() + timedelta(minutes=60)
+    }
+    token = jwt.encode(payload, secret_key, algorithm='HS256')
+    return token
+
+
+def creer_utilisateur(pseudo:str, email:str, mdp:str)->dict:
+        # vérification si l'utilisateur existe déjà
+        curseur.execute('SELECT * FROM user WHERE email=?', (email,))
+        user = curseur.fetchone()
+        if user:
+            return {'message': 'Cet email est déjà utilisé'}, 400
+        # ajout de l'utilisateur à la base de données
+        curseur.execute('INSERT INTO user (pseudo, email, mdp) VALUES (?, ?, ?)', (pseudo, email, mdp))
+        connexion.commit()
+        user_id = curseur.lastrowid
+        # génération du jeton JWT et renvoi de la réponse
+        token = generate_token(user_id)
+        return {'token': token}
+    
+# connexion
+def login(email:str, mdp:str)->dict:
+        # vérification des identifiants
+        curseur.execute('SELECT * FROM user WHERE email=? AND mdp=?', (email, mdp))
+        user = curseur.fetchone()
+        if not user:
+            return {'message': 'Identifiants invalides'}, 401
+        token = generate_token(user[0])
+        return {'token': token}
+
+
 
 def ajout_user(pseudo:str, email:str, mdp:str)-> None:
     with sqlite3.connect("api_trad.db") as connexion:
@@ -7,7 +58,6 @@ def ajout_user(pseudo:str, email:str, mdp:str)-> None:
         connexion.commit()        
         
                 
-ajout_user("user","user@user.us","user123")
         
 def ajout_action(nom:str, prix:float, entreprise:str)->None:
     with sqlite3.connect("api_trad.db") as connexion:
@@ -79,6 +129,7 @@ def portefeuille(user_id: int):
             print(f"{action[0]} - {action[1]}€")
         print(f"Capital total: {capital}€")
 
+
 def follow_user(email:str, suiveur_id:int)->None:
     with sqlite3.connect("api_trad.db") as connexion:
         curseur = connexion.cursor()
@@ -103,5 +154,22 @@ def actions_suivis(suiveur_id:int):
         for resultat in resultats:
             nom_action = resultat[0]
             prix_action = resultat[1]
-            pseudo_utilisateur = resultat[2]
-            print(f"{nom_action} - {prix_action}€ (acheté par {pseudo_utilisateur})")
+            pseudo_user = resultat[2]
+            print(f"{nom_action} - {prix_action}€ (acheté par {pseudo_user})")
+
+def obtenir_jwt_depuis_email_mdp(email:str, mdp:str):
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    curseur.execute("SELECT jwt FROM user WHERE email=? AND mdp=?", (email, mdp))
+    resultat = curseur.fetchone()
+    connexion.close()
+    return resultat
+
+
+def get_users_by_mail(mail:str):
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    curseur.execute(" SELECT * FROM user WHERE email=?", (mail,))
+    resultat = curseur.fetchall()
+    connexion.close()
+    return resultat

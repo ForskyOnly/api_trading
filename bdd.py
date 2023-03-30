@@ -9,7 +9,8 @@ curseur.execute("""
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     pseudo TEXT NOT NULL,
                     email TEXT NOT NULL,
-                    mdp TEXT NOT NULL
+                    mdp TEXT NOT NULL,
+                    jwt TEXT
                 )
                 """)
 
@@ -27,7 +28,8 @@ curseur.execute("""
                 CREATE TABLE IF NOT EXISTS action (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nom TEXT NOT NULL,
-                    prix FLOAT NOT NULL
+                    prix FLOAT NOT NULL,
+                    entreprise TEXT NOT NULL
                 )
                 """)
 
