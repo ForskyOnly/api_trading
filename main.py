@@ -66,7 +66,7 @@ async def inscription(user:UserRegister):
         token = jwt.encode({
             "email" : user.email,
             "mdp" : user.mdp,
-            "id" : id_user
+            "id" : id_user.datetime.now()
         }, SECRET_KEY, algorithm=ALGORITHM)
         crud.update_token(id_user, token)
         return {"token" : token}
@@ -87,36 +87,38 @@ async def suivre_utilisateur_route(email: str, suiveur_id: int) -> None:
     crud.suivre_utilisateur(email, suiveur_id)
     return {"detail": "Utilisateur suivi avec succès"}
 
+@app.post("/cesser_suivre_utilisateur/{suiveur_id}")
+async def arreter_suivre_utilisateur_route(suiveur_id: int)->None:
+    crud.arreter_suivre_utilisateur( suiveur_id)
+    return {"detail": "Vous ne suivez plus cet utilisateur"}
+
 @app.put("/mettre_a_jour_utilisateur/{id}")
-async def mettre_a_jour_utilisateur_route(id: int, utilisateur: User) -> None:
-    crud.mettre_a_jour_utilisateur(id, utilisateur.pseudo, utilisateur.email, utilisateur.mdp)
+async def modifier_utilisateur_route(id: int, utilisateur: User) -> None:
+    crud.modifier_utilisateur(id, utilisateur.pseudo, utilisateur.email, utilisateur.mdp)
     return {"detail": "Utilisateur mis à jour avec succès"}
 
 @app.delete("/supprimer_utilisateur/{id}")
 async def supprimer_utilisateur_route(id: int) -> None:
     crud.supprimer_utilisateur(id)
     return {"detail": "Utilisateur supprimé avec succès"}
+
+
 ####################################################### ACTIONS ###################################################################
+
+
 @app.post("/ajout_action/")
 async def ajout_action_route(action: Action) -> None:
     crud.ajout_action(action.nom, action.prix, action.entreprise)
     return {"detail": "Action ajoutée avec succès"}
 
-@app.post("/asocier_user_action/{user_id}/{action_id}")
-async def asocier_user_action_route(user_id: int, action_id: int) -> None:
-    crud.asocier_user_action(user_id, action_id)
-    return {"detail": "Action associée à l'utilisateur avec succès"}
-
-@app.post("/placer_ordre_achat/{user_id}/{action_id}")
+@app.post("/api/user/{user_id}/achat_action/{action_id}")
 async def placer_ordre_achat_route(user_id: int, action_id: int, date_achat: str, prix_achat: float) -> None:
-    connexion = sqlite3.connect("api_trad.db")
-    crud.placer_ordre_achat(connexion, user_id, action_id, date_achat, prix_achat)
+    crud.placer_ordre_achat(user_id, action_id, date_achat, prix_achat)
     return {"detail": "Ordre d'achat placé avec succès"}
 
-@app.post("/placer_ordre_vente/{user_id}/{action_id}")
+@app.post("/api/user/{user_id}/vente_action/{action_id}")
 async def placer_ordre_vente_route(user_id: int, action_id: int, date_vente: str, prix_vente: float) -> None:
-    connexion = sqlite3.connect("api_trad.db")
-    crud.placer_ordre_vente(connexion, user_id, action_id, date_vente, prix_vente)
+    crud.placer_ordre_vente(user_id, action_id, date_vente, prix_vente)
     return {"detail": "Ordre de vente placé avec succès"}
 
 @app.get("/lister_actions/")
