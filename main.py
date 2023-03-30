@@ -64,7 +64,7 @@ async def inscription(user:UserRegister):
         }, SECRET_KEY, algorithm=ALGORITHM)
         crud.update_token(id_user, token)
         return {"token" : token}
-
+    
 @app.post("/api/auth/token")
 async def login_token(user:UserLogin):
     resultat = crud.obtenir_jwt_depuis_email_mdp(user.email, hasher_mdp(user.mdp))

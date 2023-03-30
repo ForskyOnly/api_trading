@@ -25,19 +25,15 @@ def generate_token(user_id):
     return token
 
 
-def creer_utilisateur(pseudo:str, email:str, mdp:str)->dict:
-        # vérification si l'utilisateur existe déjà
-        curseur.execute('SELECT * FROM user WHERE email=?', (email,))
-        user = curseur.fetchone()
-        if user:
-            return {'message': 'Cet email est déjà utilisé'}, 400
-        # ajout de l'utilisateur à la base de données
-        curseur.execute('INSERT INTO user (pseudo, email, mdp) VALUES (?, ?, ?)', (pseudo, email, mdp))
-        connexion.commit()
-        user_id = curseur.lastrowid
-        # génération du jeton JWT et renvoi de la réponse
-        token = generate_token(user_id)
-        return {'token': token}
+def creer_utilisateur(pseudo:str, email:str, mdp:str, jwt:str) -> int:
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    curseur.execute("INSERT INTO user VALUES (NULL, ?, ?, ?, ?)", (pseudo, email, mdp, jwt))
+    id_user = curseur.lastrowid
+    connexion.commit()
+
+    connexion.close()
+    return id_user
     
 # connexion
 def login(email:str, mdp:str)->dict:
@@ -173,3 +169,14 @@ def get_users_by_mail(mail:str):
     resultat = curseur.fetchall()
     connexion.close()
     return resultat
+
+def update_token(id, token:str)->None:
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    curseur.execute("""
+                    UPDATE user
+                        SET jwt = ?
+                        WHERE id=?
+                    """,(token, id))
+    connexion.commit()
+    connexion.close()
