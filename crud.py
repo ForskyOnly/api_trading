@@ -82,9 +82,8 @@ def lister_actions():
         curseur = connexion.cursor()
         curseur.execute("SELECT nom, prix FROM action")
         actions = curseur.fetchall()
-        for action in actions:
-            print(f"{action[0]} - {action[1]}€")
-            
+        return [{"nom": action[0], "prix": action[1]} for action in actions]
+        
 
 def mettre_a_jour_action(id:int, nom:str, prix:float, entreprise:str)-> None:
     with sqlite3.connect("api_trad.db") as connexion:
