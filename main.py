@@ -26,12 +26,26 @@ class UserLogin(BaseModel):
     email: str
     mdp: str
 
-
 class Action(BaseModel):
     nom: str
     prix: float
     entreprise: str
+    
+class OrdreAchat(BaseModel):
+    user_id: int
+    action_id: int
+    date_achat: str
+    prix_achat: float
+    
+class OrdreVente(BaseModel):
+    user_id: int
+    action_id: int
+    date_vente: str
+    prix_vente: float
 
+class Follow(BaseModel):
+    suiveur_id: int
+    suivi_id: int
 ######################################################## VARIABLE ET CONSTANTE ###########################################################
 
 app = FastAPI()
@@ -71,6 +85,7 @@ async def inscription(user:UserRegister):
         crud.update_token(id_user, token)
         return {"token" : token}
     
+
 @app.post("/api/auth/token")
 async def login_token(user:UserLogin):
     resultat = crud.obtenir_jwt_depuis_email_mdp(user.email, hasher_mdp(user.mdp))
@@ -82,15 +97,16 @@ async def login_token(user:UserLogin):
 
 ################################################# USER ##############################################################################
 
-@app.post("/suivre_utilisateur/{suiveur_id}")
-async def suivre_utilisateur_route(email: str, suiveur_id: int) -> None:
-    crud.suivre_utilisateur(email, suiveur_id)
-    return {"detail": "Utilisateur suivi avec succès"}
+@app.post("/suivre_utilisateur/")
+async def suivre_utilisateur_route(follow: Follow, email: str):
+    with sqlite3.connect("api_trad.db") as connexion:
+        crud.suivre_utilisateur(connexion, email, follow.suiveur_id, follow.suivi_id)
+        return {"detail": "Utilisateur suivi avec succès"}
 
-@app.post("/cesser_suivre_utilisateur/{suiveur_id}")
-async def arreter_suivre_utilisateur_route(suiveur_id: int)->None:
-    crud.arreter_suivre_utilisateur( suiveur_id)
-    return {"detail": "Vous ne suivez plus cet utilisateur"}
+
+async def placer_ordre_achat_route(ordre_achat: OrdreAchat) -> None:
+    crud.placer_ordre_achat(connexion, ordre_achat.user_id, ordre_achat.action_id, ordre_achat.date_achat, ordre_achat.prix_achat)
+    return {"detail": "Ordre d'achat placé avec succès"}
 
 @app.put("/mettre_a_jour_utilisateur/{id}")
 async def modifier_utilisateur_route(id: int, utilisateur: User) -> None:
@@ -111,18 +127,23 @@ async def ajout_action_route(action: Action) -> None:
     crud.ajout_action(action.nom, action.prix, action.entreprise)
     return {"detail": "Action ajoutée avec succès"}
 
-@app.post("/api/user/{user_id}/achat_action/{action_id}")
-async def placer_ordre_achat_route(user_id: int, action_id: int, date_achat: str, prix_achat: float) -> None:
-    crud.placer_ordre_achat(user_id, action_id, date_achat, prix_achat)
+@app.post("/asocier_user_action/{user_id}/{action_id}")
+async def asocier_user_action_route(user_id: int, action_id: int) -> None:
+    crud.asocier_user_action(user_id, action_id)
+    return {"detail": "Action associée à l'utilisateur avec succès"}
+
+@app.post("/placer_ordre_achat/")
+async def placer_ordre_achat_route(ordre_achat: OrdreAchat) -> None:
+    crud.placer_ordre_achat(connexion, ordre_achat.user_id, ordre_achat.action_id, ordre_achat.date_achat, ordre_achat.prix_achat)
     return {"detail": "Ordre d'achat placé avec succès"}
 
-@app.post("/api/user/{user_id}/vente_action/{action_id}")
-async def placer_ordre_vente_route(user_id: int, action_id: int, date_vente: str, prix_vente: float) -> None:
-    crud.placer_ordre_vente(user_id, action_id, date_vente, prix_vente)
+@app.post("/placer_ordre_vente/")
+async def placer_ordre_vente_route(ordre_vente: OrdreVente) -> None:
+    crud.placer_ordre_vente(connexion, ordre_vente.user_id, ordre_vente.action_id, ordre_vente.date_vente, ordre_vente.prix_vente)
     return {"detail": "Ordre de vente placé avec succès"}
 
 @app.get("/lister_actions/")
-async def lister_actions_route()-> list:
+async def lister_actions_route() -> list:
     actions = crud.lister_actions()
     return actions
 
