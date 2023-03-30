@@ -63,12 +63,7 @@ def decoder_token(token:str)->dict:
 
 def verifier_token(req: Request):
     token = req.headers["Authorization"]
-        
-############################################################ MAIN #######################################################################
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+    
 
 #####################################################   AUTHENTIFICATION INSCRIPTION ##############################################
 @app.post("/api/auth/inscription")
@@ -80,19 +75,10 @@ async def inscription(user:UserRegister):
         token = jwt.encode({
             "email" : user.email,
             "mdp" : user.mdp,
-            "id" : id_user
+            "id" : id_user.datetime.now()
         }, SECRET_KEY, algorithm=ALGORITHM)
         crud.update_token(id_user, token)
         return {"token" : token}
-    
-
-@app.post("/api/auth/token")
-async def login_token(user:UserLogin):
-    resultat = crud.obtenir_jwt_depuis_email_mdp(user.email, hasher_mdp(user.mdp))
-    if resultat is None:
-        raise HTTPException(status_code=401, detail="Login ou mot de passe invalide")
-    else:
-        return {"token":resultat[0]}
     
 
 ################################################# USER ##############################################################################
@@ -109,15 +95,14 @@ async def placer_ordre_achat_route(ordre_achat: OrdreAchat) -> None:
     return {"detail": "Ordre d'achat placé avec succès"}
 
 @app.put("/mettre_a_jour_utilisateur/{id}")
-async def mettre_a_jour_utilisateur_route(id: int, utilisateur: User) -> None:
-    crud.mettre_a_jour_utilisateur(id, utilisateur.pseudo, utilisateur.email, utilisateur.mdp)
+async def modifier_utilisateur_route(id: int, utilisateur: User) -> None:
+    crud.modifier_utilisateur(id, utilisateur.pseudo, utilisateur.email, utilisateur.mdp)
     return {"detail": "Utilisateur mis à jour avec succès"}
 
-@app.delete("/supprimer_utilisateur/{id}")
-async def supprimer_utilisateur_route(id: int) -> None:
-    crud.supprimer_utilisateur(id)
-    return {"detail": "Utilisateur supprimé avec succès"}
+
 ####################################################### ACTIONS ###################################################################
+
+
 @app.post("/ajout_action/")
 async def ajout_action_route(action: Action) -> None:
     crud.ajout_action(action.nom, action.prix, action.entreprise)
@@ -143,16 +128,6 @@ async def lister_actions_route() -> list:
     actions = crud.lister_actions()
     return actions
 
-@app.put("/mettre_a_jour_action/{id}")
-async def mettre_a_jour_action_route(id: int, action: Action) -> None:
-    crud.mettre_a_jour_action(id, action.nom, action.prix, action.entreprise)
-    return {"detail": "Action mise à jour avec succès"}
-
-@app.delete("/supprimer_action/{id}")
-async def supprimer_action_route(id: int) -> None:
-    crud.supprimer_action(id)
-    return {"detail": "Action supprimée avec succès"}
-
 @app.get("/portefeuille/{user_id}")
 async def portefeuille_route(user_id: int) -> dict:
     portefeuille = portefeuille(user_id)
@@ -162,3 +137,12 @@ async def portefeuille_route(user_id: int) -> dict:
 async def actions_suivis_route(suiveur_id: int) -> dict:
     actions_suivis = actions_suivis(suiveur_id)
     return actions_suivis
+
+@app.get("/api/mes_actions")
+async def mes_actions(req: Request):
+    try:
+        decode = decoder_token(req.headers["Authorization"])
+        print(decode)
+        return {"action_id" : crud.get_action_by_user_id(decode["id"])[0]}
+    except:
+        raise HTTPException(status_code=401, detail="Vous devez être identifiés pour accéder à cet endpoint")
