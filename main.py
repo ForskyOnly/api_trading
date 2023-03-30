@@ -137,3 +137,12 @@ async def portefeuille_route(user_id: int) -> dict:
 async def actions_suivis_route(suiveur_id: int) -> dict:
     actions_suivis = actions_suivis(suiveur_id)
     return actions_suivis
+
+@app.get("/api/mes_actions")
+async def mes_actions(req: Request):
+    try:
+        decode = decoder_token(req.headers["Authorization"])
+        print(decode)
+        return {"action_id" : crud.get_action_by_user_id(decode["id"])[0]}
+    except:
+        raise HTTPException(status_code=401, detail="Vous devez être identifiés pour accéder à cet endpoint")

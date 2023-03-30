@@ -195,3 +195,13 @@ def update_token(id, token:str)->None:
                     """,(token, id))
     connexion.commit()
     connexion.close()
+    
+def get_action_by_user_id(user_id:int):
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    curseur.execute("""
+                    SELECT action_id FROM asso_user_action WHERE user_id=?
+                    """, (user_id,))
+    resultat = curseur.fetchall()
+    connexion.close()
+    return resultat
