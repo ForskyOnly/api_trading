@@ -14,15 +14,9 @@ import sqlite3
 connexion = sqlite3.connect('api_trad.db')
 curseur = connexion.cursor()
 
-secret_key = 'premierepartie02456_deuxiemepartie8547'
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
 
-def generate_token(user_id):
-    payload = {
-        'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(minutes=60)
-    }
-    token = jwt.encode(payload, secret_key, algorithm='HS256')
-    return token
 
 
 def creer_utilisateur(pseudo:str, email:str, mdp:str, jwt:str) -> int:
@@ -34,29 +28,33 @@ def creer_utilisateur(pseudo:str, email:str, mdp:str, jwt:str) -> int:
 
     connexion.close()
     return id_user
-    
-# connexion
-def login(email:str, mdp:str)->dict:
-        # vérification des identifiants
-        curseur.execute('SELECT * FROM user WHERE email=? AND mdp=?', (email, mdp))
-        user = curseur.fetchone()
-        if not user:
-            return {'message': 'Identifiants invalides'}, 401
-        token = generate_token(user[0])
-        return {'token': token}
 
 
-
-def ajout_user(pseudo:str, email:str, mdp:str)-> None:
-    with sqlite3.connect("api_trad.db") as connexion:
+def follow_user(email:str, suiveur_id:int)->None:
+        connexion = sqlite3.connect("api_trad.db")
         curseur = connexion.cursor()
-        curseur.execute("INSERT INTO user(pseudo, email, mdp) VALUES (?, ?, ?)", (pseudo, email, mdp))
-        connexion.commit()        
+        curseur.execute("SELECT id FROM user WHERE email=?", (email,))
+        suivi_id = curseur.fetchone()[0]
+        curseur.execute("INSERT INTO asso_user_user(suiveur_id, suivi_id) VALUES (?, ?)", (suiveur_id, suivi_id))
+        connexion.commit()
         
+        
+def mettre_a_jour_utilisateur(id:int, pseudo:str, email:str, mdp:str)-> None:
+        connexion = sqlite3.connect("api_trad.db")
+        curseur = connexion.cursor()
+        curseur.execute("UPDATE user SET pseudo=?, email=?, mdp=? WHERE id=?", (pseudo, email, mdp, id))
+        connexion.commit()
+
+def supprimer_utilisateur(id:int)-> None:
+        connexion = sqlite3.connect("api_trad.db")
+        curseur = connexion.cursor()
+        curseur.execute("DELETE FROM user WHERE id=?", (id,))
+        connexion.commit()
+    
                 
         
 def ajout_action(nom:str, prix:float, entreprise:str)->None:
-    with sqlite3.connect("api_trad.db") as connexion:
+        connexion = sqlite3.connect("api_trad.db")
         curseur = connexion.cursor()
         curseur.execute("INSERT INTO action(nom, prix, entreprise) VALUES (?, ?, ?)", (nom,prix,entreprise))
         connexion.commit()
@@ -126,14 +124,7 @@ def portefeuille(user_id: int):
         print(f"Capital total: {capital}€")
 
 
-def follow_user(email:str, suiveur_id:int)->None:
-    with sqlite3.connect("api_trad.db") as connexion:
-        curseur = connexion.cursor()
-        curseur.execute("SELECT id FROM user WHERE email=?", (email,))
-        suivi_id = curseur.fetchone()[0]
-        curseur.execute("INSERT INTO asso_user_user(suiveur_id, suivi_id) VALUES (?, ?)", (suiveur_id, suivi_id))
-        connexion.commit()
-        
+
 
 def actions_suivis(suiveur_id:int):
     with sqlite3.connect("api_trad.db") as connexion:

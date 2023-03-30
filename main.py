@@ -28,6 +28,7 @@ class Action(BaseModel):
     entreprise: str
 
 ######################################################## VARIABLE ET CONSTANTE ###########################################################
+
 app = FastAPI()
 connexion = sqlite3.connect('api_trad.db')
 curseur = connexion.cursor()
@@ -50,7 +51,7 @@ def verifier_token(req: Request):
 async def root():
     return {"message": "Hello World"}
 
-
+#####################################################   AUTHENTIFICATION INSCRIPTION ##############################################
 @app.post("/api/auth/inscription")
 async def inscription(user:UserRegister):
     if len(crud.get_users_by_mail(user.email)) > 0:
@@ -72,3 +73,7 @@ async def login_token(user:UserLogin):
         raise HTTPException(status_code=401, detail="Login ou mot de passe invalide")
     else:
         return {"token":resultat[0]}
+    
+
+
+################################################# USER ##############################################################################
