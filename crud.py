@@ -27,7 +27,7 @@ def creer_utilisateur(pseudo:str, email:str, mdp:str, jwt:str) -> int:
     connexion.commit()
 
     connexion.close()
-    return id_user
+    return id_user  
 
 
 def follow_user(email:str, suiveur_id:int)->None:
