@@ -1,5 +1,5 @@
 import sqlite3
-
+#####
 connexion = sqlite3.connect("api_trad.db")
 curseur = connexion.cursor()
 
