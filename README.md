@@ -5,9 +5,9 @@ Version 1.0
 
 ## Description du Projet
 
-Ce projet a été réalisé lors de la formation Dev IA Microsoft by Simplon HDF. 
+Ce projet a été réalisé lors de la formation Dev IA Microsoft by Simplon HDF.
 
-L'objectif : crée un API de trading en utilisant FastApi.
+L'objectif : crée un API de trading en utilisant FastApi, en utilisant Python et SQL.
 
 ### Contexte du projet
 
@@ -55,3 +55,15 @@ Installer depuis un terminal:
 ```
 
 - Télécharger le depuis [le depot GIT](https://github.com/ForskyOnly/api_trading)
+
+### Utilisation
+
+Importer et/ou installer les modules suivantes:
+
+- FastAPI, HTTPException, Request, Depends
+- JWTError, jwt
+- CryptContext
+- BaseModel
+- Hashlib
+- Datetime, timedelta
+- sqlite3
