@@ -44,8 +44,8 @@ class OrdreVente(BaseModel):
     prix_vente: float
 
 class Follow(BaseModel):
-    suiveur_id: int
-    suivi_id: int
+    email_suivi: str
+
 ######################################################## VARIABLE ET CONSTANTE ###########################################################
 
 app = FastAPI()
@@ -75,7 +75,7 @@ async def inscription(user:UserRegister):
         token = jwt.encode({
             "email" : user.email,
             "mdp" : user.mdp,
-            "id" : id_user.datetime.now()
+            "id" : id_user
         }, SECRET_KEY, algorithm=ALGORITHM)
         crud.update_token(id_user, token)
         return {"token" : token}
@@ -83,21 +83,29 @@ async def inscription(user:UserRegister):
 
 ################################################# USER ##############################################################################
 
-@app.post("/suivre_utilisateur/")
-async def suivre_utilisateur_route(follow: Follow, email: str):
-    with sqlite3.connect("api_trad.db") as connexion:
-        crud.suivre_utilisateur(connexion, email, follow.suiveur_id, follow.suivi_id)
-        return {"detail": "Utilisateur suivi avec succès"}
-
-
-async def placer_ordre_achat_route(ordre_achat: OrdreAchat) -> None:
-    crud.placer_ordre_achat(connexion, ordre_achat.user_id, ordre_achat.action_id, ordre_achat.date_achat, ordre_achat.prix_achat)
-    return {"detail": "Ordre d'achat placé avec succès"}
-
 @app.put("/mettre_a_jour_utilisateur/{id}")
 async def modifier_utilisateur_route(id: int, utilisateur: User) -> None:
     crud.modifier_utilisateur(id, utilisateur.pseudo, utilisateur.email, utilisateur.mdp)
     return {"detail": "Utilisateur mis à jour avec succès"}
+
+@app.post("/api/suivre_utilisateur")
+async def suivre_utilisateur(req: Request, follow: Follow):
+    try:
+        decode = decoder_token(req.headers["Authorization"])
+        crud.suivre_utilisateur(decode["email"], follow.email_suivi)
+        return {"message": f"L'utilisateur {follow.email_suivi} a été suivi avec succès."}
+    except:
+        raise HTTPException(status_code=401, detail="L'utilisateur suit déjà cet utilisateur.")
+    
+@app.delete("/api/arreter_de_suivre_utilisateur")
+async def arreter_de_suivre_utilisateur(req: Request, follow: Follow):
+    try:
+        decode = decoder_token(req.headers["Authorization"])
+        crud.arreter_de_suivre_utilisateur(decode["id"], follow.email_suivi)
+        return {"message": "L'utilisateur n'est plus suivi."}
+    except:
+        raise HTTPException(status_code=401, detail="Vous devez être identifié pour accéder à cet endpoint.")
+
 
 
 ####################################################### ACTIONS ###################################################################
@@ -142,7 +150,8 @@ async def actions_suivis_route(suiveur_id: int) -> dict:
 async def mes_actions(req: Request):
     try:
         decode = decoder_token(req.headers["Authorization"])
-        print(decode)
-        return {"action_id" : crud.get_action_by_user_id(decode["id"])[0]}
+        noms_actions = [action[0] for action in crud.get_action_by_user_id(decode["id"])]
+        return {"noms_actions" : noms_actions}
     except:
         raise HTTPException(status_code=401, detail="Vous devez être identifiés pour accéder à cet endpoint")
+

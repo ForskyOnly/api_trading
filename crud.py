@@ -28,23 +28,43 @@ def creer_utilisateur(pseudo:str, email:str, mdp:str, jwt:str) -> int:
         connexion.commit()
         return id_user  
 
-def suivre_utilisateur(email:str, suiveur_id:int)->None:
-        connexion = sqlite3.connect("api_trad.db")
-        curseur = connexion.cursor()
-        curseur.execute("SELECT id FROM user WHERE email=?", (email,))
-        suivi_id = curseur.fetchone()[0]
-        curseur.execute("INSERT INTO asso_user_user(suiveur_id, suivi_id) VALUES (?, ?)", (suiveur_id, suivi_id))
-        connexion.commit()
+def suivre_utilisateur(suiveur_email: str, suivi_email: str):
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    suiveur = curseur.execute("SELECT id FROM user WHERE email = ?", (suiveur_email,)).fetchone()
+    suivi = curseur.execute("SELECT id FROM user WHERE email = ?", (suivi_email,)).fetchone()
 
+    # Vérifier que les deux utilisateurs existent
+    if not suiveur or not suivi:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
 
-def arreter_suivre_utilisateur(email: str, suiveur_id: int) -> None:
-        connexion = sqlite3.connect("api_trad.db")
-        curseur = connexion.cursor()
-        curseur.execute("SELECT id FROM user WHERE email=?", (email,))
-        suivi_id = curseur.fetchone()[0]
-        curseur.execute("DELETE FROM asso_user_user WHERE suiveur_id=? AND suivi_id=?", (suiveur_id, suivi_id))
-        connexion.commit()
-        
+    # Vérifier que l'utilisateur suiveur ne suit pas déjà l'utilisateur suivi
+    asso_exists = curseur.execute("SELECT COUNT(*) FROM asso_user_user WHERE suiveur_id = ? AND suivi_id = ?",
+                              (suiveur[0], suivi[0])).fetchone()
+    if asso_exists[0] > 0:
+        raise HTTPException(status_code=400, detail="L'utilisateur suit déjà cet utilisateur")
+
+    # Ajouter une entrée dans la table d'association
+    curseur.execute("INSERT INTO asso_user_user (suiveur_id, suivi_id) VALUES (?, ?)", (suiveur[0], suivi[0]))
+    connexion.commit()
+
+def arreter_de_suivre_utilisateur(suiveur_id: int, suivi_email: str):
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+
+    # Vérifier que l'utilisateur suiveur existe
+    suiveur_exists = curseur.execute("SELECT COUNT(*) FROM user WHERE id = ?", (suiveur_id,)).fetchone()[0]
+    if not suiveur_exists:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    # Récupérer l'ID de l'utilisateur suivi à partir de son e-mail
+    suivi = curseur.execute("SELECT id FROM user WHERE email = ?", (suivi_email,)).fetchone()
+    if not suivi:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    # Supprimer l'entrée correspondante dans la table d'association
+    curseur.execute("DELETE FROM asso_user_user WHERE suiveur_id = ? AND suivi_id = ?", (suiveur_id, suivi[0]))
+    connexion.commit()
 
 def modifier_utilisateur(id:int, pseudo:str, email:str, mdp:str)-> None:
         connexion = sqlite3.connect("api_trad.db")
@@ -196,11 +216,15 @@ def update_token(id, token:str)->None:
     connexion.commit()
     connexion.close()
     
-def get_action_by_user_id(user_id:int):
+def get_action_by_user_id(user_id: int):
     connexion = sqlite3.connect("api_trad.db")
     curseur = connexion.cursor()
     curseur.execute("""
-                    SELECT action_id FROM asso_user_action WHERE user_id=?
+                    SELECT action.nom
+                    FROM asso_user_action 
+                    INNER JOIN action 
+                    ON asso_user_action.action_id = action.id 
+                    WHERE asso_user_action.user_id=?
                     """, (user_id,))
     resultat = curseur.fetchall()
     connexion.close()
