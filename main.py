@@ -7,7 +7,11 @@ import hashlib
 import sqlite3
 
 
-########################################################### CLASSES #########################################################################
+
+#########################################################################################################################################################################
+                                                               # CLASSES 
+#########################################################################################################################################################################
+
 
 class User(BaseModel):
     pseudo: str
@@ -45,7 +49,11 @@ class Follow(BaseModel):
     email_suivi: str
     
 
-######################################################## VARIABLE ET CONSTANTE ###########################################################
+
+#########################################################################################################################################################################
+                                                               # VARIABLE ET CONSTANTE 
+#########################################################################################################################################################################
+
 
 app = FastAPI()
 connexion = sqlite3.connect('api_trad.db')
@@ -53,7 +61,12 @@ curseur = connexion.cursor()
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
 
-###################################################### FONCTIONS ENCODGE TOKEN ###########################################################
+
+#########################################################################################################################################################################
+                                                               # FONCTIONS ENCODGE TOKEN
+#########################################################################################################################################################################
+
+
 
 def hasher_mdp(mdp:str) -> str:
     """ 
@@ -79,7 +92,9 @@ def verifier_token(req: Request):
     token = req.headers["Authorization"]
     
 
-#####################################################   AUTHENTIFICATION/INSCRIPTION  ###########################################################
+#########################################################################################################################################################################
+                                                               # AUTHENTIFICATION/INSCRIPTION 
+#########################################################################################################################################################################
 
 @app.post("/auth/inscription")
 async def inscription(user:UserRegister):
@@ -95,8 +110,9 @@ async def inscription(user:UserRegister):
         crud.update_token(id_user, token)
         return {"token" : token}
     
-
-#################################################  UTILISATEUR  #####################################################################################
+#########################################################################################################################################################################
+                                                               # UTILISATEUR
+#########################################################################################################################################################################
 
 @app.post("/utilisateur/suivre_utilisateur")
 async def suivre_utilisateur(req: Request, follow: Follow):
@@ -130,8 +146,9 @@ async def portefeuille_route(user_id: int) -> dict:
     return {"portefeuille": portefeuille_data}
 
 
-####################################################### ACTIONS ET MANIPULATION D'ACTIONS ############################################################################
-
+#########################################################################################################################################################################
+                                                               # ACTIONS ET MANIPULATIONS D'ACTIONS
+#########################################################################################################################################################################
 
 @app.post("/actions/asocier_user_action/{user_id}/{action_id}")
 async def asocier_user_action_route(user_id: int, action_id: int) -> None:
@@ -178,3 +195,50 @@ async def actions_des_suivi_route(suiveur_id: int) -> dict:
     stock_suivi = crud.actions_des_suivi(suiveur_id)
     return {"stocks_followed": stock_suivi}
 
+#########################################################################################################################################################################
+                                                               # FONCTIONS ADMINS
+#########################################################################################################################################################################
+
+
+# @app.delete("/utilisateur/supprimer/{id}")
+# async def supprimer_utilisateur_route(id: int) -> dict:
+#     crud.supprimer_utilisateur(id)
+#     return {"message": "Utilisateur supprimé avec succès"}
+    
+    
+# @app.put("/actions/mettre_a_jour_action/{action_id}")
+# async def mettre_a_jour_action_route(action_id: int, action: Action) -> None:
+#     crud.mettre_a_jour_action(action_id, action.nom, action.prix, action.entreprise)
+#     return {"detail": "Action mise à jour avec succès"}
+
+
+# @app.delete("/actions/supprimer_action/{action_id}")
+# async def supprimer_action_route(action_id: int) -> None:
+#     crud.supprimer_action(action_id)
+#     return {"detail": f"L'action {action_id} a été supprimée avec succès."}
+
+
+# @app.post("/actions/ajout_action/")
+# async def ajout_action_route(action: Action) -> None:
+#     crud.ajout_action(action.nom, action.prix, action.entreprise)
+#     return {"detail": "Action ajoutée avec succès"}
+
+# @app.post("/auth/jwt")
+# async def connexion(user:UserLogin):
+#     jwt_token = crud.obtenir_jwt_depuis_email_mdp(user.email, hasher_mdp(user.mdp))
+#     if jwt_token is None:
+#         raise HTTPException(status_code=401, detail="Identifiants invalides")
+#     else:
+#         return {"token": jwt_token[0]}
+    
+    
+# @app.get("/auth/verification_token")
+# async def verifier_token_route(request: Request):
+#     token = request.headers.get("Authorization", None)
+#     if not token:
+#         raise HTTPException(status_code=401, detail="Jeton d'authentification manquant")
+#     decoded_token = crud.verif_validite_jwt(token, SECRET_KEY, ALGORITHM)
+#     if decoded_token:
+#         return decoded_token
+#     else:
+#         raise HTTPException(status_code=401, detail="Jeton d'authentification invalide")
