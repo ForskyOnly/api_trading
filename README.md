@@ -7,7 +7,7 @@ Version 1.0
 
 Ce projet a été réalisé lors de la formation Dev IA Microsoft by Simplon HDF.
 
-L'objectif : crée un API de trading en utilisant FastApi, en utilisant Python et SQL.
+L'objectif : crée un API de trading avec FastApi, en utilisant comme language Python et SQL mais aussi l'application [POSTMAN](https://learning.postman.com/docs/publishing-your-api/documenting-your-api/)
 
 ### Contexte du projet
 
