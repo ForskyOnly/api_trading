@@ -1,18 +1,13 @@
 
-# API de trading:
+# API de trading
 
 Version 1.0
-
-
 
 ## Description du Projet
 
 Ce projet a été réalisé lors de la formation Dev IA Microsoft by Simplon HDF. L'objectif : crée un API de trading en utilisant FastApi.
 
-
 ### Contexte du projet
-
-
 
 Le client, GreenAnt souhaite créer un outil de trading social.
 
@@ -32,34 +27,29 @@ Le trading social est une forme de négociation qui permet aux traders ou aux in
 - Possibilité de suivre un utilisateur (On le trouve via son email)
 - Possibilité de voir les actions des personnes que l'on suit.
 
-
-
-## Organisation du dossier: 
-
+## Organisation du dossier
 
 - crud.py : regroupe  les fonctions nécessaire pour l'utilisation de l'API,
 - main.py : regroupe les fonctions disponible à l'utilisation via l'interface de l'API,
 - bdd.py : creation et structure de la base de donnée,
-- api_trad.db : Base de donée. 
-
+- api_trad.db : Base de donée.
 
 ## Authors
 
 - [Agathe Becquart](https://github.com/AgatheBecquart)
-- [Rubic ](https://github.com/Forskyonly)
+- [Rubic](https://github.com/Forskyonly)
 
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
 
-
 ## Installation
 
-Installer depuis un terminal: 
-```bash
-  git clone git@github.com:ForskyOnly/api_trading.git
-```
-    
-**ou** 
+Installer depuis un terminal:
 
-Télécharger le depuis [le depot GIT](https://github.com/ForskyOnly/api_trading)
+ ```bash
+  git clone git@github.com:ForskyOnly/api_trading.git
+
+```
+
+- Télécharger le depuis [le depot GIT](https://github.com/ForskyOnly/api_trading)
