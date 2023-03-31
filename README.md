@@ -35,6 +35,7 @@ Le trading social est une forme de négociation qui permet aux traders ou aux in
 - main.py : regroupe les fonctions disponible à l'utilisation via l'interface de l'API,
 - bdd.py : creation et structure de la base de donnée,
 - api_trad.db : Base de donée.
+- UML_Trading.pdf : Le MCD et le MLD en format PDF.
 
 ## Auteurs
 
