@@ -10,7 +10,10 @@ import sqlite3
 
 
 ########################################################### CLASES #########################################################################
-
+class SuivreUtilisateur(BaseModel):
+    email: str
+    suiveur_id: int
+    
 class User(BaseModel):
     pseudo: str
     email: str
@@ -42,9 +45,10 @@ class OrdreVente(BaseModel):
     action_id: int
     date_vente: str
     prix_vente: float
-
+    
 class Follow(BaseModel):
     email_suivi: str
+    
 
 ######################################################## VARIABLE ET CONSTANTE ###########################################################
 
@@ -83,12 +87,7 @@ async def inscription(user:UserRegister):
 
 ################################################# USER ##############################################################################
 
-@app.put("/mettre_a_jour_utilisateur/{id}")
-async def modifier_utilisateur_route(id: int, utilisateur: User) -> None:
-    crud.modifier_utilisateur(id, utilisateur.pseudo, utilisateur.email, utilisateur.mdp)
-    return {"detail": "Utilisateur mis à jour avec succès"}
-
-@app.post("/api/suivre_utilisateur")
+@app.post("/suivre_utilisateur")
 async def suivre_utilisateur(req: Request, follow: Follow):
     try:
         decode = decoder_token(req.headers["Authorization"])
@@ -97,7 +96,7 @@ async def suivre_utilisateur(req: Request, follow: Follow):
     except:
         raise HTTPException(status_code=401, detail="L'utilisateur suit déjà cet utilisateur.")
     
-@app.delete("/api/arreter_de_suivre_utilisateur")
+@app.delete("/arreter_de_suivre_utilisateur")
 async def arreter_de_suivre_utilisateur(req: Request, follow: Follow):
     try:
         decode = decoder_token(req.headers["Authorization"])
@@ -106,15 +105,20 @@ async def arreter_de_suivre_utilisateur(req: Request, follow: Follow):
     except:
         raise HTTPException(status_code=401, detail="Vous devez être identifié pour accéder à cet endpoint.")
 
+@app.put("/mettre_a_jour_utilisateur/{id}")
+async def modifier_utilisateur_route(id: int, utilisateur: User) -> None:
+    crud.modifier_utilisateur(id, utilisateur.pseudo, utilisateur.email, utilisateur.mdp)
+    return {"detail": "Utilisateur mis à jour avec succès"}
+
+
+@app.get("/portefeuille/{user_id}")
+async def portefeuille_route(user_id: int) -> dict:
+    portefeuille_data = crud.portefeuille(user_id)
+    return {"portefeuille": portefeuille_data}
 
 
 ####################################################### ACTIONS ###################################################################
 
-
-@app.post("/ajout_action/")
-async def ajout_action_route(action: Action) -> None:
-    crud.ajout_action(action.nom, action.prix, action.entreprise)
-    return {"detail": "Action ajoutée avec succès"}
 
 @app.post("/asocier_user_action/{user_id}/{action_id}")
 async def asocier_user_action_route(user_id: int, action_id: int) -> None:
@@ -143,8 +147,8 @@ async def portefeuille_route(user_id: int) -> dict:
 
 @app.get("/actions_suivis/{suiveur_id}")
 async def actions_suivis_route(suiveur_id: int) -> dict:
-    actions_suivis = actions_suivis(suiveur_id)
-    return actions_suivis
+    actions_suivis_list = crud.actions_suivis(suiveur_id)
+    return {"actions_suivis": actions_suivis_list}
 
 @app.get("/api/mes_actions")
 async def mes_actions(req: Request):
@@ -154,4 +158,8 @@ async def mes_actions(req: Request):
         return {"noms_actions" : noms_actions}
     except:
         raise HTTPException(status_code=401, detail="Vous devez être identifiés pour accéder à cet endpoint")
-
+    
+@app.get("/actions_utilisateurs_suivi/{suivi_id}")
+async def actions_des_suivi_route(suivi_id: int) -> dict:
+    stock_suivi = crud.actions_des_suivi(suivi_id)
+    return {"stocks_followed": stock_suivi}

@@ -33,38 +33,24 @@ def suivre_utilisateur(suiveur_email: str, suivi_email: str):
     curseur = connexion.cursor()
     suiveur = curseur.execute("SELECT id FROM user WHERE email = ?", (suiveur_email,)).fetchone()
     suivi = curseur.execute("SELECT id FROM user WHERE email = ?", (suivi_email,)).fetchone()
-
-    # Vérifier que les deux utilisateurs existent
     if not suiveur or not suivi:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
-
-    # Vérifier que l'utilisateur suiveur ne suit pas déjà l'utilisateur suivi
     asso_exists = curseur.execute("SELECT COUNT(*) FROM asso_user_user WHERE suiveur_id = ? AND suivi_id = ?",
                               (suiveur[0], suivi[0])).fetchone()
     if asso_exists[0] > 0:
         raise HTTPException(status_code=400, detail="L'utilisateur suit déjà cet utilisateur")
-
-    # Ajouter une entrée dans la table d'association
     curseur.execute("INSERT INTO asso_user_user (suiveur_id, suivi_id) VALUES (?, ?)", (suiveur[0], suivi[0]))
     connexion.commit()
 
-def arreter_de_suivre_utilisateur(suiveur_id: int, suivi_email: str):
-    connexion = sqlite3.connect("api_trad.db")
-    curseur = connexion.cursor()
 
-    # Vérifier que l'utilisateur suiveur existe
-    suiveur_exists = curseur.execute("SELECT COUNT(*) FROM user WHERE id = ?", (suiveur_id,)).fetchone()[0]
-    if not suiveur_exists:
-        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
-
-    # Récupérer l'ID de l'utilisateur suivi à partir de son e-mail
-    suivi = curseur.execute("SELECT id FROM user WHERE email = ?", (suivi_email,)).fetchone()
-    if not suivi:
-        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
-
-    # Supprimer l'entrée correspondante dans la table d'association
-    curseur.execute("DELETE FROM asso_user_user WHERE suiveur_id = ? AND suivi_id = ?", (suiveur_id, suivi[0]))
-    connexion.commit()
+def arreter_suivre_utilisateur(email: str, suiveur_id: int) -> None:
+        connexion = sqlite3.connect("api_trad.db")
+        curseur = connexion.cursor()
+        curseur.execute("SELECT id FROM user WHERE email=?", (email,))
+        suivi_id = curseur.fetchone()[0]
+        curseur.execute("DELETE FROM asso_user_user WHERE suiveur_id=? AND suivi_id=?", (suiveur_id, suivi_id))
+        connexion.commit()
+        
 
 def modifier_utilisateur(id:int, pseudo:str, email:str, mdp:str)-> None:
         connexion = sqlite3.connect("api_trad.db")
@@ -105,13 +91,13 @@ def asocier_user_action(user_id:int, action_id:int)-> None:
         
         
 def placer_ordre_achat(user_id, action_id, date_achat, prix_achat):
-    with sqlite3.connect("api_trad.db") as connexion:
+        connexion = sqlite3.connect("api_trad.db")
         curseur = connexion.cursor()
         curseur.execute("INSERT INTO asso_user_action (user_id, action_id, date_achat, prix_achat) VALUES (?, ?, ?, ?)", (user_id, action_id, date_achat, prix_achat))
         connexion.commit()
 
 def placer_ordre_vente(user_id, action_id, date_vente, prix_vente):
-    with sqlite3.connect("api_trad.db") as connexion:
+        connexion = sqlite3.connect("api_trad.db")
         curseur = connexion.cursor()
         curseur.execute("SELECT * FROM asso_user_action WHERE user_id = ? AND action_id = ? AND date_vente IS NULL", (user_id, action_id))
         action = curseur.fetchone()
@@ -120,6 +106,30 @@ def placer_ordre_vente(user_id, action_id, date_vente, prix_vente):
             connexion.commit()
         else:
             print("Erreur : Aucun ordre d'achat trouvé pour cet utilisateur et cette action.")
+            
+            
+def actions_des_suivi(suivi_id: int):
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    curseur.execute("""
+        SELECT user.pseudo, action.nom, action.prix, action.entreprise
+        FROM asso_user_action
+        INNER JOIN action ON asso_user_action.action_id = action.id
+        INNER JOIN user ON asso_user_action.user_id = user.id
+        WHERE asso_user_action.user_id IN 
+            (SELECT suivi_id FROM asso_user_user WHERE suiveur_id = ?)
+    """, (suivi_id,))
+    resultats = curseur.fetchall()
+    stock_suivi = []
+    for resultat in resultats:
+        pseudo = resultat[0]
+        nom_action = resultat[1]
+        prix_action = resultat[2]
+        entreprise = resultat[3]
+        stock_suivi.append({"pseudo": pseudo, "action": nom_action, "prix_action": prix_action, "entreprise": entreprise})
+    
+    connexion.close()
+    return stock_suivi
 
 
 def lister_actions():
@@ -143,57 +153,60 @@ def supprimer_action(id:int)-> None:
         connexion.commit()
 
 def portefeuille(user_id: int):
-        connexion = sqlite3.connect("api_trad.db")
-        curseur = connexion.cursor()
-        curseur.execute("""
-            SELECT 
-                asso_user_action.date_achat, 
-                action.nom, 
-                asso_user_action.prix_achat, 
-                asso_user_action.date_vente, 
-                asso_user_action.prix_vente 
-            FROM asso_user_action 
-            INNER JOIN action ON asso_user_action.action_id = action.id 
-            WHERE asso_user_action.user_id = ?
-        """, (user_id,))
-        resultats = curseur.fetchall()
-        portefeuille = []
-        capital = 0
-        for resultat in resultats:
-            date_achat = resultat[0]
-            nom = resultat[1]
-            prix_achat = resultat[2]
-            date_vente = resultat[3]
-            prix_vente = resultat[4]
-            if date_vente is None:
-                portefeuille.append((nom, prix_achat))
-                capital += prix_achat
-            else:
-                plus_value = prix_vente - prix_achat
-                portefeuille.append((nom, plus_value))
-                capital += prix_vente
-        for action in portefeuille:
-            print(f"{action[0]} - {action[1]}€")
-        print(f"Capital total: {capital}€")
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    curseur.execute("""
+        SELECT 
+            asso_user_action.date_achat, 
+            action.nom, 
+            asso_user_action.prix_achat, 
+            asso_user_action.date_vente, 
+            asso_user_action.prix_vente 
+        FROM asso_user_action 
+        INNER JOIN action ON asso_user_action.action_id = action.id 
+        WHERE asso_user_action.user_id = ?
+    """, (user_id,))
+    resultats = curseur.fetchall()
+    portefeuille = []
+    capital = 0
+    for resultat in resultats:
+        date_achat = resultat[0]
+        nom = resultat[1]
+        prix_achat = resultat[2]
+        date_vente = resultat[3]
+        prix_vente = resultat[4]
+        if date_vente is None:
+            portefeuille.append((nom, prix_achat))
+            capital += prix_achat
+        else:
+            plus_value = prix_vente - prix_achat
+            portefeuille.append((nom, plus_value))
+            capital += prix_vente
+    return {"actions": portefeuille, "capital": capital}
 
 
-def actions_suivis(suiveur_id:int):
-        connexion = sqlite3.connect("api_trad.db")
-        curseur = connexion.cursor()
-        curseur.execute("""
-            SELECT action.nom, action.prix, user.pseudo
-            FROM asso_user_action
-            INNER JOIN action ON asso_user_action.action_id = action.id
-            INNER JOIN user ON asso_user_action.user_id = user.id
-            WHERE asso_user_action.user_id IN 
-                (SELECT suivi_id FROM asso_user_user WHERE suiveur_id = ?)
-        """, (suiveur_id,))
-        resultats = curseur.fetchall()
-        for resultat in resultats:
-            nom_action = resultat[0]
-            prix_action = resultat[1]
-            pseudo_user = resultat[2]
-            print(f"{nom_action} - {prix_action}€ (acheté par {pseudo_user})")
+
+def actions_suivis(suiveur_id: int):
+    connexion = sqlite3.connect("api_trad.db")
+    curseur = connexion.cursor()
+    curseur.execute("""
+        SELECT action.nom, action.prix, user.pseudo
+        FROM asso_user_action
+        INNER JOIN action ON asso_user_action.action_id = action.id
+        INNER JOIN user ON asso_user_action.user_id = user.id
+        WHERE asso_user_action.user_id IN 
+            (SELECT suivi_id FROM asso_user_user WHERE suiveur_id = ?)
+    """, (suiveur_id,))
+    resultats = curseur.fetchall()
+    actions_suivis_list = []
+    for resultat in resultats:
+        nom_action = resultat[0]
+        prix_action = resultat[1]
+        pseudo_user = resultat[2]
+        actions_suivis_list.append({"nom_action": nom_action, "prix_action": prix_action, "pseudo_user": pseudo_user})
+    
+    connexion.close()
+    return actions_suivis_list
             
             
 def obtenir_jwt_depuis_email_mdp(email:str, mdp:str):
@@ -203,7 +216,6 @@ def obtenir_jwt_depuis_email_mdp(email:str, mdp:str):
     resultat = curseur.fetchone()
     connexion.close()
     return resultat
-
 
 def update_token(id, token:str)->None:
     connexion = sqlite3.connect("api_trad.db")
