@@ -60,12 +60,10 @@ Installer depuis un terminal:
 
 Importer et/ou installer les modules suivantes:
 
-- FastAPI, HTTPException, Request, Depends
-- JWTError, JWT
-- CryptContext
+- FastAPI, HTTPException, Request
+- JWT
 - BaseModel
 - Hashlib
-- Datetime, timedelta
 - sqlite3
 
 Lancer le serveur depuis un terminal avec la commande :

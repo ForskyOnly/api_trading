@@ -1,11 +1,9 @@
-from fastapi import FastAPI, HTTPException, Request, Depends
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from fastapi import FastAPI, HTTPException, Request
+from jose import jwt
 from pydantic import BaseModel
 import crud
 from jose import jwt
 import hashlib
-from datetime import datetime, timedelta
 import sqlite3
 
 
