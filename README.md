@@ -36,7 +36,7 @@ Le trading social est une forme de négociation qui permet aux traders ou aux in
 - bdd.py : creation et structure de la base de donnée,
 - api_trad.db : Base de donée.
 
-## Authors
+## Auteurs
 
 - [Agathe Becquart](https://github.com/AgatheBecquart)
 - [Rubic](https://github.com/Forskyonly)
