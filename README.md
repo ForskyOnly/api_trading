@@ -72,5 +72,7 @@ Lancer le serveur depuis un terminal avec la commande :
 
 ```bash
   uvicorn main:app --reload
-  
+
 ```
+
+Entrez " <http://127.0.0.1:8000/docs#/> " dans votre navigateur pour acceder à l'interface de l'API.
