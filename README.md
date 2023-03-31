@@ -61,7 +61,7 @@ Installer depuis un terminal:
 Importer et/ou installer les modules suivantes:
 
 - FastAPI, HTTPException, Request
-- JWT
+- JWT, JWTError
 - BaseModel
 - Hashlib
 - sqlite3
