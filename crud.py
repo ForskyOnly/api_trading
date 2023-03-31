@@ -95,7 +95,7 @@ def supprimer_utilisateur(id:int)-> None:
     curseur = connexion.cursor()
     curseur.execute("DELETE FROM user WHERE id=?", (id,))
     connexion.commit()
-
+    
 
 def get_users_by_mail(mail:str):
     """ 
@@ -225,7 +225,7 @@ def supprimer_action(id:int)-> None:
     curseur = connexion.cursor()
     curseur.execute("DELETE FROM action WHERE id=?", (id,))
     connexion.commit()
-    
+
 
 def portefeuille(user_id: int):
     """
