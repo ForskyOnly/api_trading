@@ -67,3 +67,10 @@ Importer et/ou installer les modules suivantes:
 - Hashlib
 - Datetime, timedelta
 - sqlite3
+
+Lancer le serveur depuis un terminal avec la commande :
+
+```bash
+  uvicorn main:app --reload
+  
+```
