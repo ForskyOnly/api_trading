@@ -5,7 +5,9 @@ Version 1.0
 
 ## Description du Projet
 
-Ce projet a été réalisé lors de la formation Dev IA Microsoft by Simplon HDF. L'objectif : crée un API de trading en utilisant FastApi.
+Ce projet a été réalisé lors de la formation Dev IA Microsoft by Simplon HDF. 
+
+L'objectif : crée un API de trading en utilisant FastApi.
 
 ### Contexte du projet
 
